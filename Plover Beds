@@ -1,1 +1,483 @@
-print ("Hello World, this is Plover!")
+local Parcel = require(9428572121)
+local HttpService = game:GetService("HttpService")
+local value = script:FindFirstChild("DO NOT CHANGE THIS").Value
+local productname = script:FindFirstChild("PRODUCT NAME").Value
+
+local HttpService = game:GetService("HttpService")
+
+if Parcel:Whitelist("6639bcd1956a9b4f32ff832a", value) then
+	print("😎 Thank you for using genuine Plover Products")
+	
+	type HumanInfo = {
+		Connection: RBXScriptConnection,
+		Replicating: boolean
+	}
+
+	local PLAYER_BED_TAG = "PloverBedStinkyUshy"
+
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local CollectionService = game:GetService("CollectionService")
+	local Players = game:GetService("Players")
+
+	local PloverCammaBed = ReplicatedStorage.PloverCammaBed
+	local CammaTool = script["Plover Camma"]
+
+	local Config = require(script.Configuration)
+
+	local GroupId = Config.GroupId
+	local MinRank = Config.MinimumRank
+	local HoldAnimId = Config.HoldAnimID
+
+	local RegisteredHumanoids = {} :: { [Humanoid]: HumanInfo }
+	local Debounce = {} :: { [Model]: boolean }
+	local Tracks = {} :: { [Humanoid]: AnimationTrack }
+
+
+	local function PlayHold(human: Humanoid, playing: boolean)
+		local anim = human:FindFirstChild("PloverCartHold") :: Animation
+		local track: AnimationTrack
+
+		if anim == nil then
+			anim = Instance.new("Animation")
+			anim.Name = "PloverCartHold"
+			anim.AnimationId = `rbxassetid://{HoldAnimId}`
+			anim.Parent = human
+		end
+
+		track = Tracks[human]
+
+		if not track and anim then
+			track = human:LoadAnimation(anim) :: AnimationTrack
+			track.Looped = true
+			Tracks[human] = track
+		end
+
+		if track then
+			track[playing and "Play" or "Stop"](track, 0.1)
+		end
+	end
+
+	-- Joint Replication
+	local function ReplicateJoint(character: Model, replicating: boolean): ()
+		local rootPart = character:FindFirstChild("HumanoidRootPart") :: Part
+		local torso = character:FindFirstChild("Torso") :: BasePart
+		local human = character:FindFirstChild("Humanoid") :: Humanoid
+
+		local rootJoint = rootPart:FindFirstChild("RootJoint") :: Motor6D
+		local rightHip = torso:FindFirstChild("Right Hip") :: Motor6D
+		local rightShoulder = torso:FindFirstChild("Right Shoulder") :: Motor6D
+
+		local leftHip = torso:FindFirstChild("Left Hip") :: Motor6D
+		local leftShoulder = torso:FindFirstChild("Left Shoulder") :: Motor6D
+
+		if not rootJoint or not rightHip or not rightShoulder or not leftHip or not leftShoulder then
+			return
+		end
+
+		local rootJointC0Pos = rootJoint.C0.Position :: Vector3
+
+		local rightHipOrigC1 = rightHip:FindFirstChild("OriginalC1") :: CFrameValue
+		local rightShoulderOrigC1 = rightShoulder:FindFirstChild("OriginalC1") :: CFrameValue
+
+		local leftHipOrigC1 = leftHip:FindFirstChild("OriginalC1") :: CFrameValue
+		local leftShoulderOrigC1 = leftShoulder:FindFirstChild("OriginalC1") :: CFrameValue
+
+		if replicating then
+			if rightHipOrigC1 == nil then
+				rightHipOrigC1 = Instance.new("CFrameValue")
+				rightHipOrigC1.Name = "OriginalC1"
+				rightHipOrigC1.Value = rightHip.C1
+				rightHipOrigC1.Parent = rightHip
+			end
+
+			if rightShoulderOrigC1 == nil then
+				rightShoulderOrigC1 = Instance.new("CFrameValue")
+				rightShoulderOrigC1.Name = "OriginalC1"
+				rightShoulderOrigC1.Value = rightShoulder.C1
+				rightShoulderOrigC1.Parent = rightShoulder
+			end
+
+			if leftHipOrigC1 == nil then
+				leftHipOrigC1 = Instance.new("CFrameValue")
+				leftHipOrigC1.Name = "OriginalC1"
+				leftHipOrigC1.Value = leftHip.C1
+				leftHipOrigC1.Parent = leftHip
+			end
+
+			if leftShoulderOrigC1 == nil then
+				leftShoulderOrigC1 = Instance.new("CFrameValue")
+				leftShoulderOrigC1.Name = "OriginalC1"
+				leftShoulderOrigC1.Value = leftShoulder.C1
+				leftShoulderOrigC1.Parent = leftShoulder
+			end
+		else
+			if rightHipOrigC1 ~= nil then
+				rightHipOrigC1:Destroy()
+			end
+
+			if rightShoulderOrigC1 ~= nil then
+				rightShoulderOrigC1:Destroy()
+			end
+
+			if leftHipOrigC1 ~= nil then
+				leftHipOrigC1:Destroy()
+			end
+
+			if leftShoulderOrigC1 ~= nil then
+				leftShoulderOrigC1:Destroy()
+			end
+		end
+
+		rootJoint.C1 =
+			if replicating then
+			(CFrame.new(rootJointC0Pos.X, -0.5, -rootPart.Size.Y/2) * CFrame.Angles(0, math.rad(-180), 0))
+			else
+			rootJoint.C0
+
+		rightHip.C1 =
+			if replicating then
+			(rightHipOrigC1.Value * CFrame.Angles(0, 0, math.rad(90)))
+			else
+			rightHipOrigC1.Value
+
+		rightShoulder.C1 = 
+			if replicating then
+			(rightShoulderOrigC1.Value * CFrame.Angles(0, 0, math.rad(90)))
+			else
+			rightShoulderOrigC1.Value
+
+		leftHip.C1 =
+			if replicating then
+			(leftHipOrigC1.Value * CFrame.Angles(0, 0, math.rad(-90)))
+			else
+			leftHipOrigC1.Value
+
+		leftShoulder.C1 = 
+			if replicating then
+			(leftShoulderOrigC1.Value * CFrame.Angles(0, 0, math.rad(-90)))
+			else
+			leftShoulderOrigC1.Value
+	end
+
+	local function SetNetworkOwner(model: Model, owner: Player)
+		pcall(function()
+			for _, part in model:GetDescendants() do
+				if part:IsA("BasePart") then
+					part:SetNetworkOwner(owner)
+				end
+			end
+		end)
+	end
+
+	local function SetCharacterMassless(character: Model, massless: boolean)
+		for _, part in character:GetDescendants() do
+			if part:IsA("BasePart") then
+				if massless and part:GetAttribute("OrigMass") == nil then
+					part:SetAttribute("OrigMass", part.Massless)
+				end
+
+				if massless then
+					part.Massless = true
+				else
+					part.Massless = part:GetAttribute("OrigMass") or false
+					part:SetAttribute("OrigMass", nil)
+				end
+			end
+		end
+	end
+
+	local function ListenToHumanoid(human: Humanoid): ()
+		if RegisteredHumanoids[human] then return end
+
+		local character = human.Parent :: Model
+		local connection: RBXScriptConnection
+		local data = { Connection = connection, Replicating = false }
+
+		connection = human:GetPropertyChangedSignal("SeatPart"):Connect(function()
+			local seatPart = human.SeatPart :: Seat?
+			if not seatPart or human.Health <= 0 then
+				if data.Replicating then
+					data.Replicating = false
+					ReplicateJoint(character, false)
+					SetCharacterMassless(character, false)
+
+					if seatPart and seatPart.Occupant then
+						SetNetworkOwner(seatPart.Occupant.Parent :: Model, Players:GetPlayerFromCharacter(seatPart.Occupant.Parent) :: Player)
+					end
+				end
+				return
+			end
+
+			if not data.Replicating and seatPart.Name == "PloverCamaSeat" then
+				data.Replicating = true
+				ReplicateJoint(character, true)
+				SetCharacterMassless(character, true)
+
+				if seatPart.Parent and seatPart.Parent:FindFirstChild("Carrier") then
+					local carrierValue = seatPart.Parent:FindFirstChild("Carrier") :: ObjectValue
+					SetNetworkOwner(character, carrierValue.Value :: Player)
+				end
+			end
+		end)
+
+		data.Connection = connection
+		RegisteredHumanoids[human] = data
+	end
+
+	-- Main
+	local function HasAccess(player: Player): boolean
+		if GroupId ~= 0 then
+			return player:GetRankInGroup(GroupId) >= MinRank
+		end
+
+		return true
+	end
+
+	local function SetCollisionEnabled(cart: Model, enabled: boolean)
+		local prime = cart.PrimaryPart :: BasePart
+
+		for _, part in cart:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.CanCollide = enabled
+				part.Massless = enabled
+
+				if part:IsA("Seat") then
+					part.Massless = true
+				end
+
+				if not enabled then
+					if part ~= prime then
+						local weld = Instance.new("WeldConstraint")
+						weld.Name = "BedWeldPlover"
+						weld.Part0 = prime
+						weld.Part1 = part
+						weld.Parent = part
+						part.Anchored = false
+					end
+				else
+					part.Anchored = true
+					if part:FindFirstChild("BedWeldPlover") then
+						part:FindFirstChild("BedWeldPlover"):Destroy()
+					end
+				end
+			elseif part:IsA("ProximityPrompt") then
+				if part.Name == "Interact" then
+					part.Enabled = enabled
+				end
+			end
+		end
+	end
+
+	local function AttachBed(player: Player, bed: Model, attached: boolean)
+		-- Data
+		local character = player.Character :: Model?
+		local human = character and character:FindFirstChildOfClass("Humanoid") :: Humanoid?
+		local root = character and character:FindFirstChild("HumanoidRootPart") :: BasePart
+
+		-- Check
+		if not character or not human or not root then return end
+
+		-- Data
+		local cartPrime = bed.PrimaryPart :: BasePart
+
+		local rootCF = root.CFrame :: CFrame
+		local rootPosition = rootCF.Position :: Vector3
+		local rootFront = rootCF.LookVector :: Vector3
+
+		local offsetFix = (bed:GetExtentsSize().Y) :: number -- renable when r15 support hh
+		local hipHeight = root.Size.Y / 2 :: number -- dont use human.hipheight so shitty and hard omg
+		local cartOffset = CFrame.new(0, hipHeight - 0.5, 0.1) :: CFrame
+
+		local rootCF = root.CFrame :: CFrame
+		local rootPosition = rootCF.Position :: Vector3
+
+		-- Set
+		local oldJP = human:GetAttribute("P_OldJP")
+		local oldJH = human:GetAttribute("P_OldJH")
+		if not oldJP then
+			oldJP = human.JumpPower
+			human:SetAttribute("P_OldJP", oldJP)
+		end
+
+		if not oldJH then
+			oldJH = human.JumpHeight
+			human:SetAttribute("P_OldJH", oldJH)
+		end
+
+		human.JumpHeight = if attached then 0 else oldJH
+		human.JumpPower = if attached then 0 else oldJP
+
+		-- Attach
+		if attached then
+			-- Data
+			local cartGoal = 
+				CFrame.new(rootPosition.X, rootPosition.Y + 0.1, rootPosition.Z)
+				* cartOffset
+
+			-- Set
+			bed:PivotTo(cartGoal)
+
+			task.wait(0.001)
+
+			rootPosition = root.Position
+			local xAngle, yAngle, zAngle = cartGoal:ToEulerAnglesXYZ()
+			root.CFrame =
+				CFrame.new(rootPosition.X + 1.25, rootPosition.Y, rootPosition.Z)
+				* CFrame.fromEulerAngles(xAngle, yAngle + 165, zAngle)
+
+			local weld = Instance.new("WeldConstraint")
+			weld.Name = "BedWeldPlover"
+			weld.Part0 = root
+			weld.Part1 = cartPrime
+			weld.Parent = cartPrime
+			cartPrime.Anchored = false
+			return
+		end
+	end
+
+
+	local function EquipBed(player: Player, bed: Model)
+		-- Check
+		if
+			typeof(player) ~= "Instance" or typeof(bed) ~= "Instance"
+			or not player:IsA("Player") or not bed:IsA("Model")
+		then
+			return
+		end
+
+		-- Equipped?
+		if
+			CollectionService:HasTag(player, PLAYER_BED_TAG)
+		then
+			return
+		end
+
+		-- Check for debounce
+		if Debounce[bed] then return end
+
+		-- Equip
+		Debounce[bed] = true
+		CollectionService:AddTag(player, PLAYER_BED_TAG)
+
+		task.delay(1.5, function()
+			Debounce[bed] = false
+		end)
+
+		local tool = CammaTool:Clone()
+		local stateVal = bed:FindFirstChild("State") :: StringValue
+
+		task.wait(0.1)
+
+		if stateVal.Value == "Unavailable" then
+			tool:Destroy()
+			return
+		end
+
+		-- Process
+		stateVal.Value = "Unavailable"
+		tool.Parent = player.Character
+
+		local carrierVal = Instance.new("ObjectValue")
+		carrierVal.Name = "Carrier"
+		carrierVal.Parent = bed
+		carrierVal.Value = player
+
+		SetCollisionEnabled(bed, false)
+		AttachBed(player, bed, true)
+		PlayHold(((player.Character :: Model).Humanoid :: Humanoid), true)
+
+		tool.Unequipped:Connect(function()
+			UnequipBed(player, bed, tool)
+		end)
+	end
+
+	function UnequipBed(player: Player, bed: Model, tool: Tool)
+		if not player or not bed or not tool then return end
+
+		local character = player.Character
+
+		if not character or not tool then return end
+
+		local stateVal = bed:FindFirstChild("State") :: StringValue
+		stateVal.Value = "Available"
+
+		if bed:FindFirstChild("Carrier") then
+			bed:FindFirstChild("Carrier"):Destroy()
+		end
+
+		tool:Destroy()
+		SetCollisionEnabled(bed, true)
+		task.wait(0.1)
+		AttachBed(player, bed, false)
+		PlayHold(((player.Character :: Model).Humanoid :: Humanoid), false)
+
+		task.delay(0.25, function()
+			CollectionService:RemoveTag(player, PLAYER_BED_TAG)
+		end)
+	end
+
+	local function CallbackHandler(player: Player, action: string, ...: any)
+		if not HasAccess(player) then
+			return
+		end
+
+		if action == "Take" then
+			EquipBed(player, ...)
+		elseif action == "Drop" then
+			UnequipBed(player, ...)
+		end
+	end
+
+	PloverCammaBed.OnServerInvoke = CallbackHandler
+
+	for _, human in workspace:GetDescendants() do
+		if human:IsA("Humanoid") then
+			task.defer(ListenToHumanoid, human)
+		end
+	end
+
+	workspace.DescendantAdded:Connect(function(descendant: Instance)
+		if descendant:IsA("Humanoid") then
+			ListenToHumanoid(descendant)
+		end
+	end)
+	
+else
+	print("🚨 THIS EXPERIENCE CONTAINS INGENUINE PLOVER LICENSE. YOU HAVE 24 HOURS TO REMOVE THE PRODUCT(S) FROM YOUR EXPERIENCE. 🚨")
+
+	local gameLink = "https://www.roblox.com/games/" .. tostring(game.PlaceId)
+	local ownerId = game.CreatorId
+	local ownerLink = game.CreatorType == Enum.CreatorType.User 
+		and ("https://www.roblox.com/users/" .. ownerId .. "/profile") 
+		or ("https://www.roblox.com/groups/" .. ownerId)
+
+	local data = {
+		["content"] = "<@&1344290843619754016>",
+		["embeds"] = {
+			{
+				["title"] = "🚨 Ingenuine Product Detected",
+				["description"] = "Game Link: " .. gameLink .. "\nOwner Link: " .. ownerLink .. "\nProduct: " .. productname,
+				["color"] = 16711680, -- Green (decimal of 0x00FF00)
+				["author"] = { ["name"] = "Plover Copyrights Division" },
+				["footer"] = { ["text"] = "Please alert ownership to initiate DMCA." }
+			}
+		}
+	}
+
+	local success, response = pcall(function()
+		return HttpService:PostAsync(
+			"https://plover-safety.vercel.app/api/webhooks/1344290218534240257/4VOGRJWTxv4dxKP5YgGpOrwHxKIpyq0psGYxQWufBi6uGaZCbNfQ4msIwm2Q24-al6bq",
+			HttpService:JSONEncode(data),
+			Enum.HttpContentType.ApplicationJson
+		)
+	end)
+end
+
+
+
+
+
+-- PloverCamaBed
+-- Property of Plover
+-- Programmed by internationalgyall
+
